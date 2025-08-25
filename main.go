@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 type GameState struct {
 	PlayerName string
@@ -14,8 +18,25 @@ type Question struct {
 	CorrectAnswer int
 }
 
+func (g *GameState) Init() {
+    fmt.Println("Olá! Seja bem-vindo(a) ao Quiz Game em Go!")
+	fmt.Println("Por favor, insira seu nome: ")
+	reader := bufio.NewReader(os.Stdin)
+
+	name, err := reader.ReadString('\n')
+
+	if err != nil {
+		panic("Erro ao ler a String")
+	}
+
+	g.PlayerName = name
+
+	fmt.Printf("Ok! Vamos começar o Quiz, %s", g.PlayerName)
+}
+
 func main() {
-    fmt.Println("Só um teste, boy")
+    gameteste := &GameState{}
+	gameteste.Init()
 }
 
 
