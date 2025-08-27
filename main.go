@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -17,7 +18,7 @@ type GameState struct {
 type Question struct {
 	Text string
 	Options []string
-	CorrectAnswer int
+	Answer int
 }
 
 func (g *GameState) Init() {
@@ -52,10 +53,11 @@ func (g *GameState) ProcessCSV() {
     
 	for index, record := range records {
 		if index > 0 {
+			CorrectAnswer, _ := toInt(record[5])
 			question := Question{
 				Text: record[0],
 				Options: record[1:5],
-				CorrectAnswer: toInt(record[5]),
+				Answer: CorrectAnswer,
 		}
 
 		g.Questions = append(g.Questions, question)
@@ -66,25 +68,57 @@ func (g *GameState) ProcessCSV() {
 
 func (g *GameState) Run() {
 	for index, question := range g.Questions {
-		fmt.Println(index+1, question.Text)
+		fmt.Printf("\033[33m %d. %s \033[0m\n", index + 1, question.Text)
+
+		for j, option := range question.Options {
+			fmt.Printf("[%d] %s\n", j + 1, option)
+		}
+		
+		fmt.Println("Digite a alternativa: ")
+
+		var answer int
+		var err error
+
+		for {
+			reader := bufio.NewReader(os.Stdin)
+			read, _ := reader.ReadString('\n')
+
+			answer, err = toInt(read[:len(read)-1])
+			if err != nil{
+                fmt.Println(err.Error())
+				continue
+			}
+			break
+		}
+
+		if answer == question.Answer {
+			fmt.Println("Parabéns! Você acertou.")
+			g.PlayerPoints += 10
+		}else {
+			fmt.Println("Ops! Você errou.")
+			fmt.Println("----------------------------------")
+		}
+
+		
 	}
 }
 
 func main() {
-    gameteste := &GameState{PlayerPoints: 0}
-	go gameteste.ProcessCSV()
-	gameteste.Init()
-	gameteste.Run()
+    game := &GameState{PlayerPoints: 0}
+    go game.ProcessCSV()
+	game.Init()
+	game.Run()
+
+	fmt.Printf("Fim de jogo. Você fez %d pontos\n", game.PlayerPoints)
 	
 }
 
-func toInt(s string) int {
+func toInt(s string) (int, error) {
 	i, err := strconv.Atoi(s)
 	if err != nil {
-		panic("Erro ao converter string para int")
+		return 0, errors.New("não é permitido caractere que não seja número. Por favor, insira um número")
 	}
-
-	return i
+	return i, nil
 }
 
 
